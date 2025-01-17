@@ -1,66 +1,57 @@
 #!/bin/bash
 
-# Skrip untuk menginstal WordPress secara otomatis
-
-# Periksa apakah skrip dijalankan sebagai root
-if [[ $EUID -ne 0 ]]; then
-   echo "Skrip ini harus dijalankan sebagai root" 
-   exit 1
+# Pastikan skrip dijalankan sebagai root
+if [ "$(id -u)" != "0" ]; then
+  echo "Skrip ini harus dijalankan sebagai root." >&2
+  exit 1
 fi
 
-# Variabel konfigurasi
-domain_name="example.com"
-wp_directory="/var/www/$domain_name"
-db_name="wordpress_db"
-db_user="wordpress_user"
-db_password="strongpassword"
-db_root_password="rootpassword"
+# Update repository dan sistem
+echo "Mengupdate repository..."
+nano /etc/apt/sources.list
+apt update
 
-# Memperbarui dan menginstal paket yang dibutuhkan
-apt update && apt upgrade -y
-apt install -y apache2 mysql-server php php-mysql libapache2-mod-php wget unzip
+# Instalasi layanan dan aplikasi yang dibutuhkan
+echo "Menginstal layanan dan aplikasi..."
+apt install -y openssh-sftp-server apache2 mariadb-server php phpmyadmin wget unzip
 
-# Konfigurasi MySQL
-mysql -u root <<MYSQL_SCRIPT
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$db_root_password';
-CREATE DATABASE $db_name;
-CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$db_password';
-GRANT ALL PRIVILEGES ON $db_name.* TO '$db_user'@'localhost';
+# Unduh WordPress
+echo "Mengunduh WordPress..."
+wget http://172.16.90.2/unduh/wordpress.zip
+
+# Ekstrak file WordPress
+echo "Ekstrak WordPress..."
+unzip wordpress.zip
+
+# Pindahkan WordPress ke direktori web server
+echo "Memindahkan WordPress ke direktori web server..."
+mv wordpress /var/www/html/
+
+# Ubah ke direktori web server
+cd /var/www/html/wordpress || exit
+
+# Konfigurasi database MySQL
+echo "Mengonfigurasi database MySQL..."
+mysql_secure_installation
+
+# Buat database untuk WordPress
+echo "Membuat database WordPress..."
+mysql -u root -p <<EOF
+CREATE DATABASE wordpress_db;
+CREATE USER 'wordpress_user'@'localhost' IDENTIFIED BY 'password_kuat';
+GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wordpress_user'@'localhost';
 FLUSH PRIVILEGES;
-MYSQL_SCRIPT
+EXIT;
+EOF
 
-# Unduh dan ekstrak WordPress
-wget https://wordpress.org/latest.zip -O /tmp/wordpress.zip
-unzip /tmp/wordpress.zip -d /tmp/
+# Konfigurasi SSH
+echo "Mengonfigurasi SSH..."
+nano /etc/ssh/sshd_config
+service ssh restart
 
-# Pindahkan file WordPress ke direktori tujuan
-mkdir -p $wp_directory
-cp -r /tmp/wordpress/* $wp_directory
-chown -R www-data:www-data $wp_directory
-chmod -R 755 $wp_directory
+# Menampilkan IP server
+echo "IP server adalah:"
+ip a
 
-# Buat file konfigurasi Apache
-cat <<EOL > /etc/apache2/sites-available/$domain_name.conf
-<VirtualHost *:80>
-    ServerName $domain_name
-    DocumentRoot $wp_directory
-
-    <Directory $wp_directory>
-        AllowOverride All
-    </Directory>
-
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-EOL
-
-a2ensite $domain_name
-
-# Aktifkan mod_rewrite dan restart Apache
-a2enmod rewrite
-systemctl restart apache2
-
-# Hapus file sementara
-rm -rf /tmp/wordpress /tmp/wordpress.zip
-
-echo "Instalasi WordPress selesai. Akses situs Anda di http://$domain_name"
+# Selesai
+echo "Proses instalasi WordPress selesai!"
