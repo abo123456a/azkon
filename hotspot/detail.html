@@ -1,0 +1,61 @@
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cek</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+<link rel="stylesheet" href="mks.css">
+<link rel="icon" type="/x-icon" href="/favicon.ico">
+
+</head>
+<style>
+iframe  {float:left; height:22px; width:100%;}
+</style>
+<body>
+
+<div class="row mt-10">
+<div class="col-4 mr-a" id="main" style="float:none;">
+	<div class="card">
+				
+<br>
+<div class="col-12 mr-a box-ketek" >
+
+	<div class="card">
+
+     <table class="table table-bordered table-hover mr-b-10">
+	 <p style="font-size:15px;text-align:center"><font color="#DC143C">
+							<b>Info expired<b/></p></font>
+	 <br>
+<tr><td  style="width: 50%;"><b>Kode voucher<b/></td><td><b id="user">$(username)</td></tr>	
+
+<tr><td style="width: 50%;"><b>Expired</b></td><td ><p  class="blink"><b><iframe id="exp" frameborder="0" scrolling="no" src="about:blank"></b></iframe></td></tr>
+</table>
+
+<p style="margin-top:5px">
+
+<a href="status.html"><button type="button" class="button-gadang">Kembali</button></a>
+<br><br>
+</div>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">
+	
+
+
+//get vaidity
+    var usr = document.getElementById('user').innerHTML
+    var url = "https://julio.mikhmon.online/status/status.php?name="; // http://ip-server-mikhmon/mikhmonv2/status/status.php?name=
+    var SessionName = "mks"
+    var getvalid = url+usr+"&session="+SessionName
+    document.getElementById('exp').src = getvalid;	
+// jika kurang jelas silakan kunjungi https://laksa19.github.io/tuttorial.html	
+</script>
+
+</body>
+</html>
